@@ -1,0 +1,105 @@
+spring:
+  application:
+    name: f1-ai-chatbot
+
+  # ===================================
+  # PostgreSQL Database
+  # ===================================
+  datasource:
+    url: jdbc:postgresql://localhost:5432/f1chatdb
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+
+  # ===================================
+  # Thymeleaf
+  # ===================================
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+# ===================================
+# Server
+# ===================================
+server:
+  port: 8081
+
+# ===================================
+# Google Gemini API
+# ===================================
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:BURAYA-KEYIN-YAPISTIR}
+    model: gemini-1.5-flash
+    max-tokens: 1024
+
+# ===================================
+# Chat Settings
+# ===================================
+chat:
+  max-history-size: 20
+  session-timeout-minutes: 60
+
+# ===================================
+# Logging
+# ===================================
+logging:
+  level:
+    com.f1chat: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+
+---
+# ===================================
+# DEV Profile (local geli?tirme)
+# Kullan?m: --spring.profiles.active=dev
+# ===================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+logging:
+  level:
+    com.f1chat: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+---
+# ===================================
+# PROD Profile
+# Kullan?m: --spring.profiles.active=prod
+# ===================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    com.f1chat: INFO
+    root: WARN
