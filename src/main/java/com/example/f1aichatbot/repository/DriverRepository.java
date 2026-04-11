@@ -31,3 +31,6 @@ public interface DriverRepository extends JpaRepository<Driver,Long> {
 
     List<Driver> findByWorldChampionshipsGreaterThan(Integer championships);
 }
+
+
+

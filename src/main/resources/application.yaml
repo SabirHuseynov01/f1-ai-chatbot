@@ -1,10 +1,7 @@
-spring:
+sspring:
   application:
     name: f1-ai-chatbot
 
-  # ===================================
-  # PostgreSQL Database
-  # ===================================
   datasource:
     url: jdbc:postgresql://localhost:5432/f1chatdb
     username: ${DB_USERNAME:postgres}
@@ -26,29 +23,22 @@ spring:
         format_sql: true
         default_schema: public
 
-  # ===================================
-  # Thymeleaf
-  # ===================================
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
 
-# ===================================
-# Server
-# ===================================
 server:
   port: 8081
 
 # ===================================
-# Google Gemini API
+# Ollama
 # ===================================
-gemini:
+ollama:
   api:
-    key: ${GEMINI_API_KEY:BURAYA-KEYIN-YAPISTIR}
-    model: gemini-1.5-flash
-    max-tokens: 1024
+    url: http://localhost:11434
+    model: llama3.2
 
 # ===================================
 # Chat Settings
@@ -62,15 +52,11 @@ chat:
 # ===================================
 logging:
   level:
-    com.f1chat: DEBUG
+    com.example.f1aichatbot: DEBUG
     org.springframework.web: INFO
     org.hibernate.SQL: WARN
 
 ---
-# ===================================
-# DEV Profile (local geli?tirme)
-# Kullan?m: --spring.profiles.active=dev
-# ===================================
 spring:
   config:
     activate:
@@ -79,17 +65,8 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create-drop
-logging:
-  level:
-    com.f1chat: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
 
 ---
-# ===================================
-# PROD Profile
-# Kullan?m: --spring.profiles.active=prod
-# ===================================
 spring:
   config:
     activate:
@@ -99,7 +76,4 @@ spring:
     hibernate:
       ddl-auto: validate
 
-logging:
-  level:
-    com.f1chat: INFO
-    root: WARN
+

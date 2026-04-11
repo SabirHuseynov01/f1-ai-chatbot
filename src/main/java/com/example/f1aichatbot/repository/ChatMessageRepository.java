@@ -24,3 +24,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     List<ChatMessage> findBySessionIdAndRole(String sessionId, ChatMessage.MessageRole role);
 }
+
+

@@ -34,3 +34,6 @@ public interface RaceRepository extends JpaRepository<Race, Long> {
     @Query("SELECT DISTINCT r.season FROM Race r ORDER BY r.season DESC")
     List<Integer> findAllSeasons();
 }
+
+
+

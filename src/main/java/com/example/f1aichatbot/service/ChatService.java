@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
-    private final GeminiApiService geminiApiService;
+    private final OllamaApiService ollamaApiService;
     private final F1DataService f1DataService;
 
     @Value("${chat.max-history-size:20}")
@@ -30,36 +30,31 @@ public class ChatService {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    // ===========================
-    // Ana Chat İşlemi
-    // ===========================
-
     @Transactional
     public ChatDTOs.ChatResponse processMessage(ChatDTOs.ChatRequest request) {
-        // Session ID yoksa yeni oluştur
         String sessionId = (request.getSessionId() != null && !request.getSessionId().isBlank())
                 ? request.getSessionId()
                 : generateSessionId();
 
-        log.info("Mesaj işleniyor. Session: {}, Mesaj: {}",
+        log.info("Message is being processed. Session: {}, Message: {}",
                 sessionId, request.getMessage().substring(0, Math.min(50, request.getMessage().length())));
 
         try {
-            // 1. Kullanıcı mesajını kaydet
+            // 1. Save user message
             saveMessage(sessionId, ChatMessage.MessageRole.USER, request.getMessage());
 
-            // 2. Sohbet geçmişini çek (son N mesaj)
+            // 2. Retrieve chat history
             List<ChatMessage> history = getRecentHistory(sessionId);
 
-            // 3. Soruya uygun F1 verisini çek
+            // 3. Create F1 context
             String f1Context = f1DataService.buildRelevantContext(request.getMessage());
             log.debug("F1 Context uzunluğu: {} karakter", f1Context.length());
 
-            // 4. Gemini API'ye gönder
-            String assistantMessage = geminiApiService.sendMessage(
+            // 4. Send to Ollama
+            String assistantMessage = ollamaApiService.sendMessage(
                     request.getMessage(), history, f1Context);
 
-            // 5. Asistan yanıtını kaydet
+            // 5. Save the answer
             saveMessage(sessionId, ChatMessage.MessageRole.ASSISTANT, assistantMessage);
 
             return ChatDTOs.ChatResponse.builder()
@@ -69,10 +64,9 @@ public class ChatService {
                     .build();
 
         } catch (Exception e) {
-            log.error("Mesaj işlenirken hata: {}", e.getMessage(), e);
+            log.error("Error while processing the message.: {}", e.getMessage(), e);
 
-            // Hata mesajını da kaydet
-            String errorMsg = "Üzgünüm, şu an yanıt veremiyorum. Lütfen tekrar deneyin.";
+            String errorMsg = "I'm sorry, I can't respond right now. Please try again..";
             saveMessage(sessionId, ChatMessage.MessageRole.ASSISTANT, errorMsg);
 
             return ChatDTOs.ChatResponse.builder()
@@ -83,10 +77,6 @@ public class ChatService {
                     .build();
         }
     }
-
-    // ===========================
-    // Sohbet Geçmişi
-    // ===========================
 
     public ChatDTOs.ChatHistoryResponse getHistory(String sessionId) {
         List<ChatMessage> messages = chatMessageRepository
@@ -114,28 +104,17 @@ public class ChatService {
         log.info("Session temizlendi: {}", sessionId);
     }
 
-    // ===========================
-    // Yardımcı Metodlar
-    // ===========================
-
     private List<ChatMessage> getRecentHistory(String sessionId) {
         return chatMessageRepository.findRecentBySessionId(
-                sessionId,
-                PageRequest.of(0, maxHistorySize)
-        ).reversed(); // Eskiden yeniye sırala
+                sessionId, PageRequest.of(0, maxHistorySize)
+        ).reversed();
     }
 
     private void saveMessage(String sessionId, ChatMessage.MessageRole role, String content) {
-        saveMessageWithTokens(sessionId, role, content, null);
-    }
-
-    private void saveMessageWithTokens(String sessionId, ChatMessage.MessageRole role,
-                                       String content, Integer tokens) {
         ChatMessage message = ChatMessage.builder()
                 .sessionId(sessionId)
                 .role(role)
                 .content(content)
-                .tokensUsed(tokens)
                 .build();
         chatMessageRepository.save(message);
     }

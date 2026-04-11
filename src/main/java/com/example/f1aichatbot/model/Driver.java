@@ -54,3 +54,5 @@ public class Driver {
     @Column(name = "is_active")
     private Boolean isActive;
 }
+
+
